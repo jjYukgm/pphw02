@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
 	}
 	else{
 		if(height%2 !=0)
-			coresize = width/size + 1;
+			coresize = height/size + 1;
 		else
-			coresize = width/size;
+			coresize = height/size;
 		inij = coresize * rank;
 		if(finj > (inij + coresize))
 			finj = inij + coresize;
