@@ -9,6 +9,8 @@
 #include <mpi.h>
 //enable & disable
 #include <string.h>
+#include <time.h>//time measure
+#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -21,6 +23,10 @@ typedef struct commtype
 
 int main(int argc, char *argv[])
 {
+	//time measure
+	struct timespec tt1, tt2;
+	clock_gettime(CLOCK_REALTIME, &tt1);
+	
 	Display *display;
 	Window window;      //initialization for a window
 	int screen;         //which screen 
@@ -44,7 +50,6 @@ int main(int argc, char *argv[])
 	int height = atoi(argv[7]);
 	//char *xin = argv[8];
 	int able = strncmp(argv[8], "enable", 6);
-	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
 
@@ -160,6 +165,8 @@ int main(int argc, char *argv[])
 	}
 	free((void *)remote);
 	
+	clock_gettime(CLOCK_REALTIME, &tt2);
+	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
     MPI_Finalize();
 	return 0;
 }
