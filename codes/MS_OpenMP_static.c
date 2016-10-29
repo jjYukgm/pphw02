@@ -7,11 +7,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <omp.h>
-#include <stdbool.h>
 //atoi
 #include <stdlib.h>
 //enable & disable
 #include <string.h>
+#include <time.h>//time measure
 
 typedef struct complextype
 {
@@ -20,6 +20,10 @@ typedef struct complextype
 
 int main(int argc, char *argv[])
 {
+	//time measure
+	struct timespec tt1, tt2;
+	clock_gettime(CLOCK_REALTIME, &tt1);
+	
 	Display *display;
 	Window window;      //initialization for a window
 	int screen;         //which screen 
@@ -75,12 +79,12 @@ int main(int argc, char *argv[])
 	
 	/* draw points */
 	int i, j;
-	//bool enthread = omp_get_nested();
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset) private( i, j ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
 	{
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
+		//#pragma omp for schedule(static) nowait
 		#pragma omp for schedule(static)
 		for(i=0; i<width; i++) { 
 			for(j=0; j<height; j++) {
@@ -113,5 +117,7 @@ int main(int argc, char *argv[])
 		XFlush(display);
 		sleep(5);
 	}
+	clock_gettime(CLOCK_REALTIME, &tt2);
+	printf("total time: %ld nsec\n ", tt2.tv_nsec - tt1.tv_nsec);
 	return 0;
 }
