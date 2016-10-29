@@ -21,9 +21,6 @@ typedef struct complextype
 
 int main(int argc, char *argv[])
 {
-	//time measure
-	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
 	
 	Display *display;
 	Window window;      //initialization for a window
@@ -37,7 +34,13 @@ int main(int argc, char *argv[])
 	}
 
 	screen = DefaultScreen(display);
+	/* create graph */
+	GC gc;
 
+	//time measure
+	struct timespec tt1, tt2;
+	clock_gettime(CLOCK_REALTIME, &tt1);
+	
 	int thread_num = atoi(argv[1]);
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
@@ -52,31 +55,31 @@ int main(int argc, char *argv[])
 	double iscale = height/(iright - ioffset);
 
 
-	/* set window position */
-	int x = 0;
-	int y = 0;
+    if(able ==0){
+		/* set window position */
+		int x = 0;
+		int y = 0;
 
-	/* border width in pixels */
-	int border_width = 0;
+		/* border width in pixels */
+		int border_width = 0;
 
-	/* create window */
-	window = XCreateSimpleWindow(display, RootWindow(display, screen), x, y, width, height, border_width,
-					BlackPixel(display, screen), WhitePixel(display, screen));
-	
-	/* create graph */
-	GC gc;
-	XGCValues values;
-	long valuemask = 0;
-	
-	gc = XCreateGC(display, window, valuemask, &values);
-	//XSetBackground (display, gc, WhitePixel (display, screen));
-	XSetForeground (display, gc, BlackPixel (display, screen));
-	XSetBackground(display, gc, 0X0000FF00);
-	XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
-	
-	/* map(show) the window */
-	XMapWindow(display, window);
-	XSync(display, 0);
+		/* create window */
+		window = XCreateSimpleWindow(display, RootWindow(display, screen), x, y, width, height, border_width,
+						BlackPixel(display, screen), WhitePixel(display, screen));
+		
+		XGCValues values;
+		long valuemask = 0;
+		
+		gc = XCreateGC(display, window, valuemask, &values);
+		//XSetBackground (display, gc, WhitePixel (display, screen));
+		XSetForeground (display, gc, BlackPixel (display, screen));
+		XSetBackground(display, gc, 0X0000FF00);
+		XSetLineAttributes (display, gc, 1, LineSolid, CapRound, JoinRound);
+		
+		/* map(show) the window */
+		XMapWindow(display, window);
+		XSync(display, 0);
+	}
 	
 	/* draw points */
 	int i, j;
@@ -106,8 +109,10 @@ int main(int argc, char *argv[])
 
 				#pragma omp critical
 				{
+				if(able ==0){
 					XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));	
 					XDrawPoint (display, window, gc, i, j);
+				}
 				}
 				
 			}
