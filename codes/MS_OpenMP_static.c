@@ -2,19 +2,23 @@
    Sequential Mandelbrot set
  */
 
+//./MS_OpenMP_static 4 -2 2 -2 2 400 400 enable
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <omp.h>
 #include <stdbool.h>
-
+//atoi
+#include <stdlib.h>
+//enable & disable
+#include <string.h>
 
 typedef struct complextype
 {
 	double real, imag;
 } Compl;
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	Display *display;
 	Window window;      //initialization for a window
@@ -29,11 +33,19 @@ int main(void)
 
 	screen = DefaultScreen(display);
 
+	int thread_num = atoi(argv[1]);
+	double roffset  = atof(argv[2]);
+	double rright = atof(argv[3]);
+	double ioffset  = atof(argv[4]);
+	double iright = atof(argv[5]);
 	/* set window size */
-	int width = 800;
-	int height = 800;
+	int width = atoi(argv[6]);
+	int height = atoi(argv[7]);
+	//char *xin = argv[8];
+	int able = strncmp(argv[8], "enable", 6);
+	double rscale = width/(rright - roffset);
+	double iscale = height/(iright - ioffset);
 
-	int thread_num = 3;
 
 	/* set window position */
 	int x = 0;
@@ -63,20 +75,19 @@ int main(void)
 	
 	/* draw points */
 	int i, j;
-	bool enthread = omp_get_nested();
-	#pragma omp parallel for IF(enthread) num_threads(thread_num) 
+	//bool enthread = omp_get_nested();
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset) private( i, j ) num_threads(thread_num) 
 	{
-		#pragma omp for schedule(static)
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
-		#pragma omp for private( j )
-		for(i=0; i<width; i++) {                                                                                        a
+		#pragma omp for schedule(static)
+		for(i=0; i<width; i++) { 
 			for(j=0; j<height; j++) {
 				z.real = 0.0;
 				z.imag = 0.0;
-				c.real = ((double)i - 400.0)/200.0; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
-				c.imag = ((double)j - 400.0)/200.0; /* So needs to scale the window */
+				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
+				c.imag = (double)j / iscale + ioffset; /* So needs to scale the window */
 				repeats = 0;
 				lengthsq = 0.0;
 
@@ -88,12 +99,19 @@ int main(void)
 					repeats++;
 				}
 
-				XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));		
-				XDrawPoint (display, window, gc, i, j);
+				#pragma omp critical
+				{
+					XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));	
+					XDrawPoint (display, window, gc, i, j);
+				}
+				
 			}
 		}
 	}
-	XFlush(display);
-	sleep(5);
+	
+    if(able ==0){
+		XFlush(display);
+		sleep(5);
+	}
 	return 0;
 }
