@@ -23,9 +23,6 @@ typedef struct commtype
 
 int main(int argc, char *argv[])
 {
-	//time measure
-	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
 	
 	Display *display;
 	Window window;      //initialization for a window
@@ -39,7 +36,11 @@ int main(int argc, char *argv[])
 	}
 
 	screen = DefaultScreen(display);
-
+	GC gc;
+	
+	//time measure
+	struct timespec tt1, tt2;
+	clock_gettime(CLOCK_REALTIME, &tt1);
 	
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
@@ -58,8 +59,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 	
-	GC gc;
-	if(rank==0){
+	if(rank==0&& able ==0){
 		/* set window position */
 		int x = 0;
 		int y = 0;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 	struct commtype self;
 	struct commtype *remote;
 	
-    if(rank ==0){
+    if(rank ==0&& able ==0){
 		remote = (struct commtype *)malloc(sizeof(struct commtype) * size);
 	}
 	int repeats;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 			MPI_Gather( &self, 3, MPI_INT,
 					   remote, 3, MPI_INT,
 					   0, MPI_COMM_WORLD);
-			if(rank==0){
+			if(rank==0&& able ==0){
 				XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));		
 				XDrawPoint (display, window, gc, i, j);
 				for(k=1;k<size;k++){
