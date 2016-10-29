@@ -12,6 +12,7 @@
 //enable & disable
 #include <string.h>
 #include <time.h>//time measure
+#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -118,6 +119,6 @@ int main(int argc, char *argv[])
 		sleep(5);
 	}
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("total time: %ld nsec\n ", tt2.tv_nsec - tt1.tv_nsec);
+	printf("total time: %ld sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	return 0;
 }
