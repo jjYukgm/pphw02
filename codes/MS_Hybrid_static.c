@@ -4,11 +4,12 @@
 // mpirun -n 2 ./MS_Hybrid_static 4 -2 2 -2 2 400 400 enable
 #include <X11/Xlib.h>
 #include <stdio.h>
-#include <stdlib.h>//atoi
+#include <stdlib.h>
 #include <unistd.h>
 #include <mpi.h>
 #include <omp.h>
-#include <string.h>//enable & disable
+//enable & disable
+#include <string.h>
 #include <time.h>//time measure
 #include <math.h>//time calculate
 
@@ -16,10 +17,6 @@ typedef struct complextype
 {
 	double real, imag;
 } Compl;
-typedef struct commtype
-{
-	int i, j, repeats;
-} Comm;
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +34,6 @@ int main(int argc, char *argv[])
 	screen = DefaultScreen(display);
 	GC gc;
 
-	
 	//time measure
 	struct timespec tt1, tt2;
 	clock_gettime(CLOCK_REALTIME, &tt1);
@@ -52,6 +48,7 @@ int main(int argc, char *argv[])
 	int height = atoi(argv[7]);
 	//char *xin = argv[8];
 	int able = strncmp(argv[8], "enable", 6);
+	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
 
@@ -60,8 +57,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 	
-	//mpi 
-	if(rank==0&& able ==0){
+	if(rank==0 && able ==0){
 		/* set window position */
 		int x = 0;
 		int y = 0;
@@ -90,11 +86,16 @@ int main(int argc, char *argv[])
 	
 	//assign length
 	int inii=0;
-	int inij=0;
+	//int inij=0;
 	int fini=width;
-	int finj=height;
+	//int finj=height;
 	int coresize=0;
-	if(width >= height){
+	/*int master=0;
+	if(size>1){
+		size--;
+		master = 1;
+	}*/
+	//if(width >= height){
 		if(width%2 !=0)
 			coresize = width/size + 1;
 		else
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
 		inii = coresize * rank;
 		if(fini > (inii + coresize))
 			fini = (inii + coresize);
-	}
+	/*}
 	else{
 		if(height%2 !=0)
 			coresize = height/size + 1;
@@ -112,26 +113,31 @@ int main(int argc, char *argv[])
 		inij = coresize * rank;
 		if(finj > (inij + coresize))
 			finj = inij + coresize;
+	}*/
+	
+	/* draw points */
+	Compl z, c;
+	int *remote_i, *remote_repeats;
+	int *self_repeats = (int *) malloc(sizeof(int) * height);
+	
+    
+	if(rank ==0 ){
+		remote_i = (int *)malloc(sizeof(int) * size);
+		remote_repeats = (int *)malloc(sizeof(int) * height * size);
+		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
 	}
 	
+	int repeats;
 	int i, j, k;
-	
+	double temp, lengthsq;
+	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
 	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
 	{
-		/* draw points */
-		Compl z, c;
-		struct commtype self;
-		struct commtype *remote;
-		
-		if(rank ==0&& able ==0){
-			remote = (struct commtype *)malloc(sizeof(struct commtype) * size);
-		}
-		int repeats;
-		double temp, lengthsq;
 		#pragma omp for schedule(static)
 		for(i=inii; i<fini; i++) {
-			for(j=inij; j<finj; j++) {
+			//if(master==0 || rank > 0)
+			for(j=0; j<height; j++) {
 				z.real = 0.0;
 				z.imag = 0.0;
 				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
@@ -146,36 +152,40 @@ int main(int argc, char *argv[])
 					lengthsq = z.real*z.real + z.imag*z.imag; 
 					repeats++;
 				}
-				self.i = i;
-				self.j = j;
-				self.repeats = repeats;
-				
-				#pragma omp critical
-				{
-					MPI_Gather( &self, 3, MPI_INT,
-							   remote, 3, MPI_INT,
-							   0, MPI_COMM_WORLD);
-					if(rank==0 && able ==0){
-						XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));		
-						XDrawPoint (display, window, gc, i, j);
-						for(k=1;k<size;k++){
-							XSetForeground (display, gc,  1024 * 1024 * (remote[k].repeats % 256));		
-							XDrawPoint (display, window, gc, remote[k].i, remote[k].j);
-						}							
-					}
-				}
+				self_repeats[j] = repeats;
 				//MPI_Barrier( MPI_COMM_WORLD );
 			}
+			//MPI_Barrier( MPI_COMM_WORLD );
+			#pragma omp critical
+			{
+			MPI_Gather( &i, 1 , MPI_INT,
+					   remote_i, 1 , MPI_INT,
+					   0, MPI_COMM_WORLD);
+			MPI_Gather( self_repeats, height , MPI_INT,
+					   remote_repeats, height  , MPI_INT,
+					   0, MPI_COMM_WORLD);
+			if(rank ==0 && able ==0){
+				for(k=0;k<size;k++){
+					for(j=0;j<height;j++){
+						XSetForeground (display, gc,  1024 * 1024 * (remote_repeats[k*height+j] % 256));	
+						XDrawPoint (display, window, gc, remote_i[k], j);
+					}
+				}
+			}
+			}
 		}
-		//free((void *)remote);
 	}
-    if(rank ==0 && able ==0){
+	//printf("[%d]after for loop \n", rank);
+	if(rank ==0 && able ==0){
 		XFlush(display);
 		sleep(5);
+		free((void *)remote_i);
+		free((void *)remote_repeats);
 	}
+	free((void *)self_repeats);
 	
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	
     MPI_Finalize();
 	return 0;
