@@ -124,6 +124,6 @@ int main(int argc, char *argv[])
 		sleep(5);
 	}
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("total time: %ld sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("total time: %.3f sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	return 0;
 }
