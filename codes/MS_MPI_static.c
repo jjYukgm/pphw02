@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 	int repeats;
 	int i, j, k;
 	double temp, lengthsq;
-	printf("[%d]before for loop \n", rank);
+	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
 	for(i=inii; i<fini; i++) {
 		//if(master==0 || rank > 0)
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	printf("[%d]after for loop \n", rank);
+	//printf("[%d]after for loop \n", rank);
 	if(rank ==0 && able ==0){
 		XFlush(display);
 		sleep(5);
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 	free((void *)self_repeats);
 	
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("total time: %.3f sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	
     MPI_Finalize();
 	return 0;
