@@ -10,8 +10,8 @@
 #include <omp.h>
 //enable & disable
 #include <string.h>
-#include <time.h>//time measure
-#include <math.h>//time calculate
+//#include <time.h>//time measure
+//#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -24,19 +24,21 @@ int main(int argc, char *argv[])
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
-	/* open connection with the server */ 
-	display = XOpenDisplay(NULL);
-	if(display == NULL) {
-		fprintf(stderr, "cannot open display\n");
-		return 0;
+	if(able ==0){
+		/* open connection with the server */ 
+		display = XOpenDisplay(NULL);
+		if(display == NULL) {
+			fprintf(stderr, "cannot open display\n");
+			return 0;
+		}
+
+		screen = DefaultScreen(display);
 	}
-
-	screen = DefaultScreen(display);
 	GC gc;
-
+/*
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
+	clock_gettime(CLOCK_REALTIME, &tt1);*/
 	
 	int thread_num = atoi(argv[1]);
 	double roffset  = atof(argv[2]);
@@ -116,7 +118,6 @@ int main(int argc, char *argv[])
 	}*/
 	
 	/* draw points */
-	Compl z, c;
 	int *remote_i, *remote_repeats;
 	int *self_repeats = (int *) malloc(sizeof(int) * height);
 	
@@ -129,12 +130,13 @@ int main(int argc, char *argv[])
 	
 	int repeats;
 	int i, j, k;
-	double temp, lengthsq;
 	int chunk = 10;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j ) num_threads(thread_num) 
 	{
+		Compl z, c;
+		double temp, lengthsq;
 		#pragma omp for schedule(dynamic, chunk)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
@@ -184,9 +186,9 @@ int main(int argc, char *argv[])
 		free((void *)remote_repeats);
 	}
 	free((void *)self_repeats);
-	
+	/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
 	
     MPI_Finalize();
 	return 0;
