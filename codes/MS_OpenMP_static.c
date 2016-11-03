@@ -11,8 +11,8 @@
 #include <stdlib.h>
 //enable & disable
 #include <string.h>
-#include <time.h>//time measure
-#include <math.h>//time calculate
+//#include <time.h>//time measure
+//#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -25,21 +25,23 @@ int main(int argc, char *argv[])
 	Display *display;
 	Window window;      //initialization for a window
 	int screen;         //which screen 
-
-	/* open connection with the server */ 
-	display = XOpenDisplay(NULL);
-	if(display == NULL) {
-		fprintf(stderr, "cannot open display\n");
-		return 0;
-	}
-
-	screen = DefaultScreen(display);
 	/* create graph */
 	GC gc;
 
+    if(able ==0){
+		/* open connection with the server */ 
+		display = XOpenDisplay(NULL);
+		if(display == NULL) {
+			fprintf(stderr, "cannot open display\n");
+			return 0;
+		}
+
+		screen = DefaultScreen(display);
+	}
+	/*
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
+	clock_gettime(CLOCK_REALTIME, &tt1);*/
 	
 	int thread_num = atoi(argv[1]);
 	double roffset  = atof(argv[2]);
@@ -122,8 +124,8 @@ int main(int argc, char *argv[])
     if(able ==0){
 		XFlush(display);
 		sleep(5);
-	}
+	}/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("total time: %.3f sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("total time: %.3f sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
 	return 0;
 }
