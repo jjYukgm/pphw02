@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
 	}*/
 	
 	/* draw points */
-	Compl z, c;
 	int *remote_i, *remote_repeats;
 	int *self_repeats = (int *) malloc(sizeof(int) * height);
 	
@@ -129,13 +128,14 @@ int main(int argc, char *argv[])
 		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
 	}
 	
-	int repeats;
 	int i, j, k;
-	double temp, lengthsq;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j ) num_threads(thread_num) 
 	{
+		Compl z, c;
+		int repeats;
+		double temp, lengthsq;
 		#pragma omp for schedule(static)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
