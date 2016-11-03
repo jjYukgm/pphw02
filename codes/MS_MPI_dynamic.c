@@ -9,8 +9,8 @@
 #include <mpi.h>
 //enable & disable
 #include <string.h>
-#include <time.h>//time measure
-#include <math.h>//time calculate
+//#include <time.h>//time measure
+//#include <math.h>//time calculate
 
 #define terminate_tag 0
 #define data_tag 1
@@ -32,19 +32,22 @@ int main(int argc, char *argv[])
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
-	/* open connection with the server */ 
-	display = XOpenDisplay(NULL);
-	if(display == NULL) {
-		fprintf(stderr, "cannot open display\n");
-		return 0;
-	}
+	int able = strncmp(argv[8], "enable", 6);
+		if( able==0){
+		/* open connection with the server */ 
+		display = XOpenDisplay(NULL);
+		if(display == NULL) {
+			fprintf(stderr, "cannot open display\n");
+			return 0;
+		}
 
-	screen = DefaultScreen(display);
+		screen = DefaultScreen(display);
+	}
 	GC gc;
-	
+	/*
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
+	clock_gettime(CLOCK_REALTIME, &tt1);*/
 	
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
@@ -53,8 +56,6 @@ int main(int argc, char *argv[])
 	/* set window size */
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
-	//char *xin = argv[8];
-	int able = strncmp(argv[8], "enable", 6);
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
 
@@ -171,9 +172,9 @@ int main(int argc, char *argv[])
 		XFlush(display);
 		sleep(5);
 	}
-	
+	/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));*/
     MPI_Finalize();
 	return 0;
 }
