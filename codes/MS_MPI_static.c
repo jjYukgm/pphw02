@@ -35,10 +35,10 @@ int main(int argc, char *argv[])
 		screen = DefaultScreen(display);
 	}
 	GC gc;
-
+/*
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
+	clock_gettime(CLOCK_REALTIME, &tt1);*/
 	
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
