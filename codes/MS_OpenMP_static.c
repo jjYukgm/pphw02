@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 	/* create graph */
 	GC gc;
 
+	int able = strncmp(argv[8], "enable", 6);
     if(able ==0){
 		/* open connection with the server */ 
 		display = XOpenDisplay(NULL);
@@ -51,8 +52,6 @@ int main(int argc, char *argv[])
 	/* set window size */
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
-	//char *xin = argv[8];
-	int able = strncmp(argv[8], "enable", 6);
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
 
