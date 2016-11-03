@@ -9,8 +9,8 @@
 #include <mpi.h>
 //enable & disable
 #include <string.h>
-#include <time.h>//time measure
-#include <math.h>//time calculate
+//#include <time.h>//time measure
+//#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -23,14 +23,17 @@ int main(int argc, char *argv[])
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
-	/* open connection with the server */ 
-	display = XOpenDisplay(NULL);
-	if(display == NULL) {
-		fprintf(stderr, "cannot open display\n");
-		return 0;
-	}
+	int able = strncmp(argv[8], "enable", 6);
+	if( able==0){
+		/* open connection with the server */ 
+		display = XOpenDisplay(NULL);
+		if(display == NULL) {
+			fprintf(stderr, "cannot open display\n");
+			return 0;
+		}
 
-	screen = DefaultScreen(display);
+		screen = DefaultScreen(display);
+	}
 	GC gc;
 
 	//time measure
@@ -44,8 +47,6 @@ int main(int argc, char *argv[])
 	/* set window size */
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
-	//char *xin = argv[8];
-	int able = strncmp(argv[8], "enable", 6);
 	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 	
-	if(rank==0){
+	if(rank==0 && able==0){
 		/* set window position */
 		int x = 0;
 		int y = 0;
@@ -167,16 +168,18 @@ int main(int argc, char *argv[])
 		}
 	}
 	//printf("[%d]after for loop \n", rank);
-	if(rank ==0 && able ==0){
-		XFlush(display);
-		sleep(5);
+	if(rank ==0 ){
+		if(able ==0){
+			XFlush(display);
+			sleep(5);
+		}
 		free((void *)remote_i);
 		free((void *)remote_repeats);
 	}
 	free((void *)self_repeats);
-	
+	/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
 	
     MPI_Finalize();
 	return 0;
