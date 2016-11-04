@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
-	int able = strncmp(argv[8], "enable", 6);
 	if(able ==0){
 		/* open connection with the server */ 
 		display = XOpenDisplay(NULL);
@@ -50,6 +49,7 @@ int main(int argc, char *argv[])
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
 	//char *xin = argv[8];
+	int able = strncmp(argv[8], "enable", 6);
 	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
@@ -128,19 +128,21 @@ int main(int argc, char *argv[])
 		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
 	}
 	
+	int pt=0;
 	int repeats;
 	int i, j, k;
-	int chunk = 1; // tuned value in od
+	int chunk = 1;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j , pt) num_threads(thread_num) 
 	{
 		Compl z, c;
 		double temp, lengthsq;
-		#pragma omp for schedule(dynamic, chunk)
+		#pragma omp for schedule(dynamic, chunk) collapse(2)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
 			for(j=0; j<height; j++) {
+				pt+=1;
 				z.real = 0.0;
 				z.imag = 0.0;
 				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
@@ -177,6 +179,7 @@ int main(int argc, char *argv[])
 			}
 			}
 		}
+		printf("[n%d][t%d]  pt: %d\n", rank, omp_get_thread_num(), pt);
 	}
 	//printf("[%d]after for loop \n", rank);
 	if(rank ==0 && able ==0){
