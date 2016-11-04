@@ -125,6 +125,8 @@ int main(int argc, char *argv[])
 		remote_repeats = (int *)malloc(sizeof(int) * height * size);
 		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
 	}
+	//point cal
+	int pt =0;
 	
 	int repeats;
 	int i, j, k;
@@ -133,6 +135,7 @@ int main(int argc, char *argv[])
 	MPI_Barrier( MPI_COMM_WORLD );
 	for(i=inii; i<fini; i++) {
 		//if(master==0 || rank > 0)
+		pt+=height;
 		for(j=0; j<height; j++) {
 			z.real = 0.0;
 			z.imag = 0.0;
@@ -180,6 +183,7 @@ int main(int argc, char *argv[])
 	/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
 	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
+	printf("[%d] pt: %d\n", rank, pt);
 	
     MPI_Finalize();
 	return 0;
