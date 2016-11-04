@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 	
 	int repeats;
 	int i, j, k;
-	int chunk = 10;
+	int chunk = 1; // tuned value in od
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
 	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j ) num_threads(thread_num) 
