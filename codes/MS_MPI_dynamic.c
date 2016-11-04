@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 		XSync(display, 0);
 	}
 	
-	
+	int pt=0;
 	/* draw points */
 	int i, k;
 	MPI_Barrier( MPI_COMM_WORLD );
@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
 		MPI_Recv(&row, 1, MPI_INT, 0, MPI_ANY_TAG,
 				MPI_COMM_WORLD, &status);
 		while(status.MPI_TAG == data_tag){
+			pt+=width;
 			self.j = row;
 			c.imag = (double)row / iscale + ioffset; 
 			for(i=0; i<width; i++) {
@@ -175,6 +176,7 @@ int main(int argc, char *argv[])
 	/*
 	clock_gettime(CLOCK_REALTIME, &tt2);
 	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));*/
+	printf("[%d] pt: %d\n", rank, pt);
     MPI_Finalize();
 	return 0;
 }
