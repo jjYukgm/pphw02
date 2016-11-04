@@ -82,17 +82,19 @@ int main(int argc, char *argv[])
 		XSync(display, 0);
 	}
 	
+	int pt=0;
 	/* draw points */
 	int i, j;
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j , pt) num_threads(thread_num) 
 	{
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
 		//#pragma omp for schedule(static) nowait
-		#pragma omp for schedule(static)
+		#pragma omp for schedule(static) collapse(2)
 		for(i=0; i<width; i++) { 
 			for(j=0; j<height; j++) {
+				pt+=1;
 				z.real = 0.0;
 				z.imag = 0.0;
 				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
@@ -118,6 +120,7 @@ int main(int argc, char *argv[])
 				
 			}
 		}
+		printf("[%d]  pt: %d\n",omp_get_thread_num(),pt);
 	}
 	
     if(able ==0){
