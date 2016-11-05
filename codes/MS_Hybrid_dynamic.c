@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
+	int able = strncmp(argv[8], "enable", 6);
 	if(able ==0){
 		/* open connection with the server */ 
 		display = XOpenDisplay(NULL);
@@ -48,8 +49,6 @@ int main(int argc, char *argv[])
 	/* set window size */
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
-	//char *xin = argv[8];
-	int able = strncmp(argv[8], "enable", 6);
 	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
@@ -137,7 +136,7 @@ int main(int argc, char *argv[])
 		int pt=0;
 		Compl z, c;
 		double temp, lengthsq;
-		#pragma omp for schedule(dynamic, chunk) //collapse(2)
+		#pragma omp for schedule(dynamic, chunk)// collapse(2)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
 			for(j=0; j<height; j++) {
