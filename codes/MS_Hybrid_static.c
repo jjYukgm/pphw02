@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
-		#pragma omp for schedule(static) collapse(2)
+		#pragma omp for schedule(static) //collapse(2)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
 			for(j=0; j<height; j++) {
