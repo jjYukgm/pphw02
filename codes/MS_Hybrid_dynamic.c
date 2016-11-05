@@ -127,15 +127,14 @@ int main(int argc, char *argv[])
 		remote_repeats = (int *)malloc(sizeof(int) * height * size);
 		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
 	}
-	
-	int pt=0;
 	int repeats;
 	int i, j, k;
 	int chunk = 1;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j , pt) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j) num_threads(thread_num) 
 	{
+		int pt=0;
 		Compl z, c;
 		double temp, lengthsq;
 		#pragma omp for schedule(dynamic, chunk) collapse(2)
