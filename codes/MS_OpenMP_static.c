@@ -82,11 +82,11 @@ int main(int argc, char *argv[])
 		XSync(display, 0);
 	}
 	
-	int pt=0;
 	/* draw points */
 	int i, j;
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j , pt) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j ) num_threads(thread_num) 
 	{
+		int pt=0;
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
