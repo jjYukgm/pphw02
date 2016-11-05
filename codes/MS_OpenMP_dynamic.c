@@ -85,8 +85,7 @@ int main(int argc, char *argv[])
 	
 	/* draw points */
 	int i, j;
-	int chunk = 10;
-	chunk= atoi(argv[9]);
+	int chunk = 1;
 	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, chunk) private(  j ) num_threads(thread_num) 
 	{
 		int pt=0;
