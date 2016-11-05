@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		int pt=0;
 		Compl z, c;
 		double temp, lengthsq;
-		#pragma omp for schedule(dynamic, chunk) collapse(2)
+		#pragma omp for schedule(dynamic, chunk) //collapse(2)
 		for(i=inii; i<fini; i++) {
 			//if(master==0 || rank > 0)
 			for(j=0; j<height; j++) {
