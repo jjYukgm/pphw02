@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 	
 	clock_gettime(CLOCK_REALTIME, &tt2);
 	//printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
-	printf("[n%d] pt: %d	;comp Time: %.3f sec\n", rank, omp_get_thread_num(), pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[n%d] pt: %d	;comp Time: %.3f sec\n", rank, pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
     MPI_Finalize();
 	return 0;
 }
