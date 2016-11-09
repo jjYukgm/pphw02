@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	int i, j, k;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height) private(  j, tt2) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height, tt1) private(  j, tt2) num_threads(thread_num) 
 	{
 		int pt=0;
 		Compl z, c;
