@@ -9,8 +9,8 @@
 #include <mpi.h>
 //enable & disable
 #include <string.h>
-//#include <time.h>//time measure
-//#include <math.h>//time calculate
+#include <time.h>//time measure
+#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -35,10 +35,10 @@ int main(int argc, char *argv[])
 		screen = DefaultScreen(display);
 	}
 	GC gc;
-/*
+
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);*/
+	clock_gettime(CLOCK_REALTIME, &tt1);
 	
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
@@ -180,11 +180,11 @@ int main(int argc, char *argv[])
 		free((void *)remote_repeats);
 	}
 	free((void *)self_repeats);
-	/*
-	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
-	printf("[%d] pt: %d\n", rank, pt);
 	
+	clock_gettime(CLOCK_REALTIME, &tt2);
+	//printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
+	printf("[n%d] pt: %d	;comp Time: %.3f sec\n", rank, omp_get_thread_num(), pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+    
     MPI_Finalize();
 	return 0;
 }
