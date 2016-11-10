@@ -11,8 +11,8 @@
 #include <stdlib.h>
 //enable & disable
 #include <string.h>
-//#include <time.h>//time measure
-//#include <math.h>//time calculate
+#include <time.h>//time measure
+#include <math.h>//time calculate
 
 typedef struct complextype
 {
@@ -40,10 +40,10 @@ int main(int argc, char *argv[])
 		screen = DefaultScreen(display);
 	}
 
-	/*
+	
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);*/
+	clock_gettime(CLOCK_REALTIME, &tt1);
 	
 	int thread_num = atoi(argv[1]);
 	double roffset  = atof(argv[2]);
@@ -85,17 +85,18 @@ int main(int argc, char *argv[])
 	
 	/* draw points */
 	int i, j;
-	int chunk = 1;// tuned value
-	chunk= atoi(argv[9]);
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, chunk) private(  j ) num_threads(thread_num) 
+	int chunk = 1;
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, chunk) private( i, j, tt2 ) num_threads(thread_num) 
 	{
+		int pt=0;
 		Compl z, c;
 		int repeats;
 		double temp, lengthsq;
 		//#pragma omp for schedule(static) nowait
-		#pragma omp for schedule(dynamic, chunk)
+		#pragma omp for schedule(dynamic, chunk) collapse(2)
 		for(i=0; i<width; i++) { 
 			for(j=0; j<height; j++) {
+				pt+=1;
 				z.real = 0.0;
 				z.imag = 0.0;
 				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
@@ -121,13 +122,14 @@ int main(int argc, char *argv[])
 				
 			}
 		}
+		clock_gettime(CLOCK_REALTIME, &tt2);
+		printf("[t%d]  pt: %d	;comp Time: %.3f sec\n", omp_get_thread_num(), pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	}
 	
     if(able ==0){
 		XFlush(display);
 		sleep(5);
 	}/*
-	clock_gettime(CLOCK_REALTIME, &tt2);
 	printf("total time: %.3f sec\n ", tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
 	return 0;
 }
