@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	
 	/* draw points */
 	int i, j;
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i) private(  j, tt2 ) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset) private( i, j, tt2 ) num_threads(thread_num) 
 	{
 		int pt=0;
 		Compl z, c;
