@@ -1,7 +1,7 @@
  /* 
    Sequential Mandelbrot set
  */
-// mpirun -n 2 ./MS_Hybrid_static 4 -2 2 -2 2 400 400 enable
+// mpirun -n 2 ./MS_Hybrid_dynamic 4 -2 2 -2 2 400 400 enable
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,22 +10,31 @@
 #include <omp.h>
 //enable & disable
 #include <string.h>
-#include <time.h>//time measure
-#include <math.h>//time calculate
+//#include <time.h>//time measure
+//#include <math.h>//time calculate
+
+#define terminate_tag 0
+#define data_tag 1
+#define result_tag 2
 
 typedef struct complextype
 {
 	double real, imag;
 } Compl;
+typedef struct commtype
+{
+	int j, *repeats;
+} Comm;
 
 int main(int argc, char *argv[])
 {
+	
 	Display *display;
 	Window window;      //initialization for a window
 	int screen;         //which screen 
 
 	int able = strncmp(argv[8], "enable", 6);
-	if(able ==0){
+		if( able==0){
 		/* open connection with the server */ 
 		display = XOpenDisplay(NULL);
 		if(display == NULL) {
@@ -36,11 +45,13 @@ int main(int argc, char *argv[])
 		screen = DefaultScreen(display);
 	}
 	GC gc;
-
 	//time measure
-	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);
+	double tt1, tt2;
 	
+	/*
+	struct timespec tt1, tt2;
+	clock_gettime(CLOCK_REALTIME, &tt1);*/
+
 	int thread_num = atoi(argv[1]);
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
@@ -49,8 +60,6 @@ int main(int argc, char *argv[])
 	/* set window size */
 	int width = atoi(argv[6]);
 	int height = atoi(argv[7]);
-	//char *xin = argv[8];
-	
 	double rscale = width/(rright - roffset);
 	double iscale = height/(iright - ioffset);
 
@@ -58,8 +67,9 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+	tt1 = MPI_Wtime();
 	
-	if(rank==0 && able ==0){
+	if(rank==0&& able ==0){
 		/* set window position */
 		int x = 0;
 		int y = 0;
@@ -68,8 +78,7 @@ int main(int argc, char *argv[])
 		int border_width = 0;
 
 		/* create window */
-		window = XCreateSimpleWindow(display, RootWindow(display, screen), x, y, width, height, border_width,
-						BlackPixel(display, screen), WhitePixel(display, screen));
+		window = XCreateSimpleWindow(display, RootWindow(display, screen), x, y, width, height, border_width, BlackPixel(display, screen), WhitePixel(display, screen));
 		
 		/* create graph */
 		XGCValues values;
@@ -86,113 +95,130 @@ int main(int argc, char *argv[])
 		XSync(display, 0);
 	}
 	
-	//assign length
-	int inii=0;
-	//int inij=0;
-	int fini=width;
-	//int finj=height;
-	int coresize=0;
-	/*int master=0;
-	if(size>1){
-		size--;
-		master = 1;
-	}*/
-	//if(width >= height){
-		if(width%2 !=0)
-			coresize = width/size + 1;
-		else
-			coresize = width/size;
-		
-		inii = coresize * rank;
-		if(fini > (inii + coresize))
-			fini = (inii + coresize);
-	/*}
-	else{
-		if(height%2 !=0)
-			coresize = height/size + 1;
-		else
-			coresize = height/size;
-		inij = coresize * rank;
-		if(finj > (inij + coresize))
-			finj = inij + coresize;
-	}*/
-	
-	/* draw points */
-	int *remote_i, *remote_repeats;
-	int *self_repeats = (int *) malloc(sizeof(int) * height);
-	
-    
-	if(rank ==0 ){
-		remote_i = (int *)malloc(sizeof(int) * size);
-		remote_repeats = (int *)malloc(sizeof(int) * height * size);
-		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
-	}
-	
-	int repeats;
-	int i, j, k;
-	int chunk = 1; // tuned value in od
-	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height, tt1) private(  j, tt2 ) num_threads(thread_num) 
-	{
-		int pt=0;
-		Compl z, c;
-		double temp, lengthsq;
-		#pragma omp for schedule(dynamic, chunk)
-		for(i=inii; i<fini; i++) {
-			//if(master==0 || rank > 0)
-			for(j=0; j<height; j++) {
-				pt+=1;
-				z.real = 0.0;
-				z.imag = 0.0;
-				c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
-				c.imag = (double)j / iscale + ioffset; /* So needs to scale the window */
-				repeats = 0;
-				lengthsq = 0.0;
-
-				while(repeats < 100000 && lengthsq < 4.0) { /* Theorem : If c belongs to M, then |Zn| <= 2. So Zn^2 <= 4 */
-					temp = z.real*z.real - z.imag*z.imag + c.real;
-					z.imag = 2*z.real*z.imag + c.imag;
-					z.real = temp;
-					lengthsq = z.real*z.real + z.imag*z.imag; 
-					repeats++;
-				}
-				self_repeats[j] = repeats;
-				//MPI_Barrier( MPI_COMM_WORLD );
-			}
-			//MPI_Barrier( MPI_COMM_WORLD );
+	if(rank==0){
+		#pragma omp parallel shared(tt1, width, thread_num) private( tt2) num_threads(1) 
+		{
+		/* draw points */
+		int i, k;
+		int working = 0;
+		int row = 0;
+		//struct commtype remote;
+		int remote_row, *remote_repeats;
+		MPI_Status status;
+		//remote.repeats = (int *)malloc(sizeof(int)*width);
+		remote_repeats = (int *)malloc(sizeof(int)*width);
+		
+		for(k=1;k<size ;k++){
+			MPI_Send(&row, 1, MPI_INT, k, data_tag, MPI_COMM_WORLD);
+			//working+=thread_num;
+			//row+=thread_num;
+			working++;
+			row++;
+		}
+		do{
 			#pragma omp critical
 			{
-			MPI_Gather( &i, 1 , MPI_INT,
-					   remote_i, 1 , MPI_INT,
-					   0, MPI_COMM_WORLD);
-			MPI_Gather( self_repeats, height , MPI_INT,
-					   remote_repeats, height  , MPI_INT,
-					   0, MPI_COMM_WORLD);
-			if(rank ==0 && able ==0){
-				for(k=0;k<size;k++){
-					for(j=0;j<height;j++){
-						XSetForeground (display, gc,  1024 * 1024 * (remote_repeats[k*height+j] % 256));	
-						XDrawPoint (display, window, gc, remote_i[k], j);
-					}
+			// receive message from any source
+			MPI_Recv(&remote_row, 1, MPI_INT, MPI_ANY_SOURCE, result_tag, MPI_COMM_WORLD, &status);
+			MPI_Recv(remote_repeats, width, MPI_INT, status.MPI_SOURCE, result_tag, MPI_COMM_WORLD, &status);
+			working--;
+			if(row < height){
+				// send reply back to sender of the message received above
+				MPI_Send(&row, 1, MPI_INT, status.MPI_SOURCE, data_tag, MPI_COMM_WORLD);
+				working++;
+				row++;
+			}
+			else
+				MPI_Send(&row, 1, MPI_INT, status.MPI_SOURCE, terminate_tag, MPI_COMM_WORLD);
+			
+			if(able==0 && remote_row < height){
+				for(i=0;i<width;i++){
+					XSetForeground (display, gc,  1024 * 1024 * (remote_repeats[i] % 256));		
+					XDrawPoint (display, window, gc, i, remote_row);
 				}
 			}
 			}
+			
+		}while(working>0);
+		//clock_gettime(CLOCK_REALTIME, &tt2);
+		tt2 = MPI_Wtime();
+		printf("[n%d][t%d]	;comp Time: %.3f sec\n", rank, omp_get_thread_num(), tt2 - tt1 );
 		}
-		clock_gettime(CLOCK_REALTIME, &tt2);
-		printf("[n%d][t%d]  pt: %d	;comp Time: %.3f sec\n", rank, omp_get_thread_num(), pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
 	}
-	//printf("[%d]after for loop \n", rank);
-	if(rank ==0 && able ==0){
+	else{
+		int row;
+		int chunk = 1;
+		MPI_Status status;
+		MPI_Recv(&row, 1, MPI_INT, 0, MPI_ANY_TAG,
+				MPI_COMM_WORLD, &status);
+		
+			
+		int pt[thread_num];
+		memset( pt, 0, thread_num*sizeof(int) );
+		//struct commtype self;
+		int *self_repeats;
+		MPI_Status status2;
+		Compl z, c;
+		int repeats, i;
+		double temp, lengthsq;
+		status2.MPI_TAG = status.MPI_TAG;
+		self_repeats = (int *)malloc(sizeof(int)*width);
+		
+		while(status2.MPI_TAG == data_tag ){
+			//printf("[n%d][t%d]  row: %d	\n", rank, omp_get_thread_num(), row);
+		
+			//self.j = row;
+			if(row < height){
+				//pt+=width;
+				c.imag = (double)row / iscale + ioffset; 
+				#pragma omp parallel shared(chunk, width, pt, rscale, roffset, self_repeats) firstprivate(c) private( i, z, temp, lengthsq, repeats) num_threads(thread_num) 
+				{
+				#pragma omp for schedule(dynamic, chunk)
+				for(i=0; i<width; i++) {
+					pt[omp_get_thread_num()]++;
+					z.real = 0.0;
+					z.imag = 0.0;
+					c.real = (double)i / rscale + roffset; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
+					
+					repeats = 0;
+					lengthsq = 0.0;
+
+					while(repeats < 100000 && lengthsq < 4.0) { /* Theorem : If c belongs to M, then |Zn| <= 2. So Zn^2 <= 4 */
+						temp = z.real*z.real - z.imag*z.imag + c.real;
+						z.imag = 2*z.real*z.imag + c.imag;
+						z.real = temp;
+						lengthsq = z.real*z.real + z.imag*z.imag; 
+						repeats++;
+					}
+					self_repeats[i] = repeats;
+					//MPI_Barrier( MPI_COMM_WORLD );
+				}
+				}
+				
+			}
+			//#pragma omp critical
+			//{
+			MPI_Send(&row, 1, MPI_INT, 0, result_tag, MPI_COMM_WORLD);
+			MPI_Send(self_repeats, width, MPI_INT, 0, result_tag, MPI_COMM_WORLD);
+			MPI_Recv(&row, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status2);
+			//}
+			
+		}
+		//clock_gettime(CLOCK_REALTIME, &tt2);
+		tt2 = MPI_Wtime();
+		printf("[n%d]  pt: %d,", rank, pt[0]);
+		for(i=1;i<thread_num;i++)
+			printf(" %d,", pt[i]);
+		printf("\n;comp Time: %.3f sec\n",tt2 - tt1 );
+	}
+	
+    if(rank ==0 && able ==0){
 		XFlush(display);
 		sleep(5);
-		free((void *)remote_i);
-		free((void *)remote_repeats);
 	}
-	free((void *)self_repeats);
 	
-	//printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
-	
-    MPI_Finalize();
+	//printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
+	MPI_Finalize();
 	return 0;
 }
