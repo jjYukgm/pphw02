@@ -117,22 +117,23 @@ int main(int argc, char *argv[])
 			finj = inij + coresize;
 	}*/
 	
-	/* draw points */
-	int *remote_i, *remote_repeats;
-	int *self_repeats = (int *) malloc(sizeof(int) * height);
-	
-    
-	if(rank ==0 ){
-		remote_i = (int *)malloc(sizeof(int) * size);
-		remote_repeats = (int *)malloc(sizeof(int) * height * size);
-		//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
-	}
-	
-	int i, j, k;
 	//printf("[%d]before for loop \n", rank);
 	MPI_Barrier( MPI_COMM_WORLD );
-	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, i, inii, fini, height, tt1) private(  j, tt2) num_threads(thread_num) 
+	#pragma omp parallel shared(window, gc , rscale, roffset, iscale, ioffset, inii, fini, height, tt1) private(  tt2) num_threads(thread_num) 
 	{
+		
+		/* draw points */
+		int *remote_i, *remote_repeats;
+		int *self_repeats = (int *) malloc(sizeof(int) * height);
+		
+		
+		if(rank ==0 ){
+			remote_i = (int *)malloc(sizeof(int) * size);
+			remote_repeats = (int *)malloc(sizeof(int) * height * size);
+			//remote = (struct commtype *)malloc(sizeof(int)*( height + 1 ) * size);
+		}
+		
+		int i, j, k;
 		int pt=0;
 		Compl z, c;
 		int repeats;
@@ -180,15 +181,17 @@ int main(int argc, char *argv[])
 		}
 		clock_gettime(CLOCK_REALTIME, &tt2);
 		printf("[n%d][t%d]  pt: %d	;comp Time: %.3f sec\n", rank, omp_get_thread_num(), pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
+		//printf("[%d]after for loop \n", rank);
+		if(rank ==0 && able ==0){
+			XFlush(display);
+			sleep(5);
+		}
+		if(rank==0){
+			free((void *)remote_i);
+			free((void *)remote_repeats);
+		}
+		free((void *)self_repeats);
 	}
-	//printf("[%d]after for loop \n", rank);
-	if(rank ==0 && able ==0){
-		XFlush(display);
-		sleep(5);
-		free((void *)remote_i);
-		free((void *)remote_repeats);
-	}
-	free((void *)self_repeats);
 	/*
 	printf("[%d]total time: %.3f sec\n ", rank, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));*/
 	
