@@ -205,12 +205,14 @@ int main(int argc, char *argv[])
 			//}
 			
 		}
+		free((void *)self_repeats);
 		//clock_gettime(CLOCK_REALTIME, &tt2);
 		tt2 = MPI_Wtime();
 		printf("[n%d]  pt: %d,", rank, pt[0]);
 		for(i=1;i<thread_num;i++)
 			printf(" %d,", pt[i]);
 		printf("\n;comp Time: %.3f sec\n",tt2 - tt1 );
+		
 	}
 	
     if(rank ==0 && able ==0){
