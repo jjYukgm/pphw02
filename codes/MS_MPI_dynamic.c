@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-	
 	if(rank==0&& able ==0){
 		/* set window position */
 		int x = 0;
@@ -94,7 +93,34 @@ int main(int argc, char *argv[])
 	/* draw points */
 	int i, k;
 	MPI_Barrier( MPI_COMM_WORLD );
-	if(rank==0){
+	if(size==1){
+		Compl z, c;
+		int repeats;
+		double temp, lengthsq;
+		int i, j;
+		for(i=0; i<width; i++) {
+			for(j=0; j<height; j++) {
+				z.real = 0.0;
+				z.imag = 0.0;
+				c.real = ((double)i - 400.0)/200.0; /* Theorem : If c belongs to M(Mandelbrot set), then |c| <= 2 */
+				c.imag = ((double)j - 400.0)/200.0; /* So needs to scale the window */
+				repeats = 0;
+				lengthsq = 0.0;
+
+				while(repeats < 100000 && lengthsq < 4.0) { /* Theorem : If c belongs to M, then |Zn| <= 2. So Zn^2 <= 4 */
+					temp = z.real*z.real - z.imag*z.imag + c.real;
+					z.imag = 2*z.real*z.imag + c.imag;
+					z.real = temp;
+					lengthsq = z.real*z.real + z.imag*z.imag; 
+					repeats++;
+				}
+
+				XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));		
+				XDrawPoint (display, window, gc, i, j);
+			}
+		}
+	}
+	else if(rank==0){
 		int working = 0;
 		int row = 0;
 		struct commtype remote;
