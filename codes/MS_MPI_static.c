@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		master = 1;
 	}*/
 	//if(width >= height){
-		if(width%2 !=0)
+		if(width%size !=0)
 			coresize = width/size + 1;
 		else
 			coresize = width/size;
@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
 		inii = coresize * rank;
 		if(fini > (inii + coresize))
 			fini = (inii + coresize);
+	
 	/*}
 	else{
 		if(height%2 !=0)
@@ -162,12 +163,29 @@ int main(int argc, char *argv[])
 				   remote_repeats, height  , MPI_INT,
 				   0, MPI_COMM_WORLD);
 		if(rank ==0 && able ==0){
-			for(k=0;k<size;k++){
+			for(k=0;k<size-1;k++){
 				for(j=0;j<height;j++){
 					XSetForeground (display, gc,  1024 * 1024 * (remote_repeats[k*height+j] % 256));	
 					XDrawPoint (display, window, gc, remote_i[k], j);
 				}
 			}
+			if(k*coresize+i <= width){
+				for(j=0;j<height;j++){
+					XSetForeground (display, gc,  1024 * 1024 * (remote_repeats[k*height+j] % 256));	
+					XDrawPoint (display, window, gc, remote_i[k], j);
+				}
+			}
+		}
+	}
+	fini = (inii + coresize);
+	if(rank==size-1){
+		for(;i < fini; i++){
+			MPI_Gather( &i, 1 , MPI_INT,
+				   remote_i, 1 , MPI_INT,
+				   0, MPI_COMM_WORLD);
+			MPI_Gather( self_repeats, height , MPI_INT,
+				   remote_repeats, height  , MPI_INT,
+				   0, MPI_COMM_WORLD);
 		}
 	}
 	//printf("[%d]after for loop \n", rank);
