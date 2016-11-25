@@ -9,8 +9,8 @@
 #include <mpi.h>
 //enable & disable
 #include <string.h>
-//#include <time.h>//time measure
-//#include <math.h>//time calculate
+#include <time.h>//time measure
+#include <math.h>//time calculate
 
 #define terminate_tag 0
 #define data_tag 1
@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 		screen = DefaultScreen(display);
 	}
 	GC gc;
-	/*
+	
 	//time measure
 	struct timespec tt1, tt2;
-	clock_gettime(CLOCK_REALTIME, &tt1);*/
-	
+	clock_gettime(CLOCK_REALTIME, &tt1);
+
 	double roffset  = atof(argv[2]);
 	double rright = atof(argv[3]);
 	double ioffset  = atof(argv[4]);
@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-	
 	if(rank==0&& able ==0){
 		/* set window position */
 		int x = 0;
@@ -90,11 +89,38 @@ int main(int argc, char *argv[])
 		XSync(display, 0);
 	}
 	
-	
+	int pt=0;
 	/* draw points */
 	int i, k;
 	MPI_Barrier( MPI_COMM_WORLD );
-	if(rank==0){
+	if(size==1){
+		Compl z, c;
+		int repeats;
+		double temp, lengthsq;
+		int i, j;
+		for(i=0; i<width; i++) {
+			for(j=0; j<height; j++) {
+				z.real = 0.0;
+				z.imag = 0.0;
+				c.real = (double)i / rscale + roffset; 
+				c.imag = (double)j / iscale + ioffset; 
+				repeats = 0;
+				lengthsq = 0.0;
+
+				while(repeats < 100000 && lengthsq < 4.0) { /* Theorem : If c belongs to M, then |Zn| <= 2. So Zn^2 <= 4 */
+					temp = z.real*z.real - z.imag*z.imag + c.real;
+					z.imag = 2*z.real*z.imag + c.imag;
+					z.real = temp;
+					lengthsq = z.real*z.real + z.imag*z.imag; 
+					repeats++;
+				}
+
+				XSetForeground (display, gc,  1024 * 1024 * (repeats % 256));		
+				XDrawPoint (display, window, gc, i, j);
+			}
+		}
+	}
+	else if(rank==0){
 		int working = 0;
 		int row = 0;
 		struct commtype remote;
@@ -141,6 +167,7 @@ int main(int argc, char *argv[])
 		MPI_Recv(&row, 1, MPI_INT, 0, MPI_ANY_TAG,
 				MPI_COMM_WORLD, &status);
 		while(status.MPI_TAG == data_tag){
+			pt+=width;
 			self.j = row;
 			c.imag = (double)row / iscale + ioffset; 
 			for(i=0; i<width; i++) {
@@ -172,9 +199,10 @@ int main(int argc, char *argv[])
 		XFlush(display);
 		sleep(5);
 	}
-	/*
+	
 	clock_gettime(CLOCK_REALTIME, &tt2);
-	printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));*/
+	//printf("[%d]total time: %.3f sec\n ", rank, (double)tt2.tv_sec - (double)tt1.tv_sec+ (double)tt2.tv_nsec*pow (10.0, -9.0) - (double)tt1.tv_nsec*pow (10.0, -9.0));
+	printf("[n%d] pt: %d	;comp Time: %.3f sec\n", rank, pt, tt2.tv_sec - tt1.tv_sec+ tt2.tv_nsec*pow (10.0, -9.0) - tt1.tv_nsec*pow (10.0, -9.0));
     MPI_Finalize();
 	return 0;
 }
